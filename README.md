@@ -1,1 +1,1 @@
-Git Push Test
+This project aims to visualize music through colors like a painting using python.
