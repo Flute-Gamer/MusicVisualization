@@ -1,19 +1,23 @@
-import numpy as np
 import math
+import numpy as np
 import pandas as pd
 import sounddevice as sd
+import matplotlib.pyplot as plt
 
 fs = 44100 # frequência de amostragem
-duration = 0.2  # segundos
+duration = 0.5  # segundos
+recorded = []
 frequenciesVector = []
 frequenciesMatrix = [[],[]]
 
-def record():
+
+def recording():
     try:
         myrecording = sd.rec(int(duration * fs), samplerate=fs, channels=1)
+        recorded.append(myrecording)
         sd.wait()
-        return myrecording
-    
+        return 
+
     except Exception as e:
         print("Erro na função record:", e)
 
@@ -42,19 +46,79 @@ def fourier(recording):
     except Exception as e:
         print("Erro na função fourier:", e)
 
-def painting():
+def painting(soundFreqMatrix):
+    ## 380(violeta) - 750(vermelho)nm, lambda inverso da frequencia, logo, frequencias menores -> lambdas maiores vice versa 
+    try:
+        waveLengthMatrix = np.zeros((soundFreqMatrix.shape), dtype=int)
+        for i in range(soundFreqMatrix.shape[0]):  
+            for j in range(soundFreqMatrix.shape[1]):  
+                x = soundFreqMatrix[i, j]
+                y = (x-20)/(20000-20)
+                waveLengthMatrix[i][j] = int(750 - (y*380))
+
+        ## temos 370nm entre os extremos de cores, vamos dividir em 16 pedaços
+        ## site de wavelengths to rgb https://405nm.com/wavelength-to-color/
+        size = soundFreqMatrix.shape[0]
+        rgbMatrix = np.zeros((size, size, 3), dtype=int)
+        for i in range(waveLengthMatrix.shape[0]):
+            for j in range(soundFreqMatrix.shape[1]):
+                if waveLengthMatrix[i][j] <= 403.125:
+                    rgbMatrix[i][j] = [123, 0, 145]
+                elif 403.125 < waveLengthMatrix[i][j] <= 426.25:
+                    rgbMatrix[i][j] = [120, 0, 233]
+                elif 426.25 < waveLengthMatrix[i][j] <= 449.375:
+                    rgbMatrix[i][j] = [23, 0, 255]
+                elif 449.375 < waveLengthMatrix[i][j] <= 472.5:
+                    rgbMatrix[i][j] = [0, 123, 255]
+                elif 472.5 < waveLengthMatrix[i][j] <= 495.625:
+                    rgbMatrix[i][j] = [0, 230, 255]
+                elif 495.625 < waveLengthMatrix[i][j] <= 518.75:
+                    rgbMatrix[i][j] = [0, 255, 56]
+                elif 518.75 < waveLengthMatrix[i][j] <= 541.875:
+                    rgbMatrix[i][j] = [94, 255, 0]
+                elif 541.875 < waveLengthMatrix[i][j] <= 565:
+                    rgbMatrix[i][j] = [173, 255, 0]
+                elif 565 < waveLengthMatrix[i][j] <= 588.125:
+                    rgbMatrix[i][j] = [243, 255, 0]
+                elif 588.125 < waveLengthMatrix[i][j] <= 611.25:
+                    rgbMatrix[i][j] = [255, 193, 0]
+                elif 611.25 < waveLengthMatrix[i][j] <= 634.375:
+                    rgbMatrix[i][j] = [255, 111, 0]
+                elif 634.375 < waveLengthMatrix[i][j] <= 657.5: ### aparentemente daqui pra frente, é só vermelho mesmo
+                    rgbMatrix[i][j] = [254, 0, 0]
+                elif 657.5 < waveLengthMatrix[i][j] <= 680.625:
+                    rgbMatrix[i][j] = [233, 0, 0]
+                elif 680.625 < waveLengthMatrix[i][j] <= 703.75:
+                     rgbMatrix[i][j] = [213, 0, 0]
+                else:
+                    rgbMatrix[i][j] = [150, 0, 0] 
+                
+        
+        displayImage(rgbMatrix)
+        return 
     
-    return
+    except Exception as e:
+        print("Erro na função painting", e)
+    
+def displayImage(image):
+    plt.imshow(image)
+    plt.show()
 
 try:
     while True:
-        recorded = record()
-        frequenciesVector.append(fourier(recorded))
+        try:    
+            recording()
+        except Exception as e:
+            print("Erro:", e)
 
 except KeyboardInterrupt:
     try:
+        for i in recorded:
+            frequenciesVector.append(fourier(i))
         side = int(math.sqrt(len(frequenciesVector))) ##linha e coluna da matriz quadrada de frequencias
         frequenciesMatrix = np.reshape(frequenciesVector[:side*side], (side, side))
+        print(frequenciesMatrix)
+        painting(frequenciesMatrix)
         print("Parado pelo usuário.")
     except Exception as e:
         print("Erro:", e)
