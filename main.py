@@ -100,7 +100,7 @@ def painting(soundFreqMatrix):
                 elif 100 < soundFreqMatrix[i][j] <= 200:
                     rgbMatrix[i][j] = [246, 120, 40]
                 elif 200 < soundFreqMatrix[i][j] <= 400:
-                    rgbMatrix[i][j] = [246, 120, 40]
+                    rgbMatrix[i][j] = [232, 246, 40]
                 elif 400 < soundFreqMatrix[i][j] <= 800:
                     rgbMatrix[i][j] = [0, 128, 0]
                 elif 800 < soundFreqMatrix[i][j] <= 1600:
